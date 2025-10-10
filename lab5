@@ -1,0 +1,86 @@
+#Цель программы: Создать таблицу значений функций, построить график
+from math import log, e
+a_min = float(input('Введите значение начальное значение a: '))
+a_max = float(input('Введите значение конечное значение a: '))
+a_step = float(input('Введите кол-во шагов: '))
+y_min = float('inf')
+y_max = -float('inf')
+y2_max = -float('inf')
+y_total_pos = 80
+
+if len(str(a_max)) <= 7 and len(str(a_min)) <= 7:
+    print('-' * 73)
+    print(f"| {'a':^15} | {'y1':^15} | {'y2':^15} | {'y3':^15} |")
+    print('-' * 73)
+
+    #Сколько раз будет выполняться for loop
+    n = int((a_max - a_min) / a_step)
+    current_a = a_min
+    for i in range(n+1):
+        y1 = current_a**3 - 23.8 * current_a**2 + 44.9 * current_a - 10.34
+        #Нахождение минимума и максимума
+        if y1 < y_min:
+            y_min = y1
+        if y1 > y_max:
+            y_max = y1
+        #Вывод таблицы
+        if current_a > 0:
+            y2 = current_a * log(current_a, e) - 6
+            if y2 > y2_max:
+                y2_max = y2
+            y3 = (abs(y1 * y2))**0.5
+            print(f"| {current_a:^15.8g} | {y1:^15.8g} | {y2:^15.8g} | {y3:^15.8g} |")
+        else:
+            print(f"| {current_a:^15.8g} | {y1:^15.8g} | {'None':^15} | {'None':^15} |")
+        current_a += a_step
+       
+    print('-' * 73)
+
+    #Построение горизонтальной(у) линейки
+    notches = int(input('Сколько засечек? '))
+    last_pos = 0  # начинаем с 0
+    show_y = ' '*10  # отступ для значений a
+    if 4 <= notches <= 8:
+        #Нахождение равных интервалов, которые в сумме составляют область значений y
+        y_step = (y_max - y_min) / (notches - 1)
+        #Кол-во засечек = кол-во вставок значений 
+        for i in range(notches):
+            #Нахождение текущего значения y, просто мин y складываем с шагом(интервалом)
+            current_y = y_min + i * y_step
+            #Масштабируем
+            normalized_y = (current_y - y_min) / (y_max - y_min)
+            notch_pos = int(normalized_y * (y_total_pos - 1))
+            #Вывод значения
+            label = f'{current_y:.2f}'
+            show_y = show_y + ' '*(notch_pos - last_pos) + label
+            last_pos = notch_pos + len(label)  # учитываем длину подписи
+
+        print(show_y)
+    
+    #Проверяем, нужно ли рисовать ось X
+        draw_x_axis = y_min < 0 < y_max
+        x_axis_pos = None
+        if draw_x_axis:
+            x_axis_pos = int((0 - y_min) * (y_total_pos - 1) / (y_max - y_min))
+        current_a = a_min
+        for i in range(n+1):
+            y1 = current_a**3 - 23.8 * current_a**2 + 44.9 * current_a - 10.34
+            star_position = int((y1 - y_min) * (y_total_pos - 1) / (y_max - y_min))
+            a_str = f"{current_a:8.2f} |"
+            #Строим строку
+            graph_line = a_str
+            for pos in range(y_total_pos):
+                if pos == star_position:
+                    graph_line += "*"
+                elif draw_x_axis and pos == x_axis_pos:
+                    graph_line += "|"
+                else:
+                    graph_line += " "
+            
+            print(graph_line)
+            current_a += a_step
+
+    else:
+        print('Ошибка, кол-во засечек не должно превышать 8 и быть меньше 4')
+
+print(f'y1 - y2 = {y_max - y2_max}')
