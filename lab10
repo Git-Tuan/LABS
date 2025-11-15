@@ -1,0 +1,205 @@
+# Дао Ань Туан, ИУ7-14Б
+import time
+import random
+
+def selection_sort(arr):
+    '''Сортирует список по методу простого выбора
+    args: 
+        arr(list): неотсортированный список
+    return: 
+        (list): список, содержащий отсортированный по алгоритму список и кол-во перестановок
+    '''
+    swaps = 0
+    for i in range(len(arr)):
+        min_idx = i
+        for j in range(i + 1, len(arr)):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+        # Меняем местами элементы, если минимум только если минимум был найден
+        if min_idx != i:
+            arr[i], arr[min_idx] = arr[min_idx], arr[i]
+            swaps += 1 # Кол-во перестановок
+    array = [arr, swaps]
+    
+    return array
+
+def measure_sort(arr):
+    '''Считает время сортировки
+    args: 
+        arr(list): неотсортированный список
+    return: 
+        (float): время сортировки
+        (int): кол-во перестановок
+    '''
+    start_time = time.time()
+    data = selection_sort(arr)
+    end_time = time.time()
+    time_implementation = end_time - start_time
+    return time_implementation, data[1]
+
+def generate_array(size, array_type):
+    '''Генерирует список, в соответствии с запросом пользователя
+    args: 
+        size(int): длина списка
+        array_type(str): тип списка(упорядоченный, обратно упорядоченный, произвольный
+
+    return:
+        (list): отсортированный список
+    '''
+    arr = list(range(size))
+
+    if array_type == 'random':
+        random.shuffle(arr)
+    elif array_type == 'sorted':
+        pass  # уже отсортирован
+    elif array_type == 'reversed':
+        arr.reverse()
+    return arr
+
+
+print("\n1 - Демонстрация сортировки")
+print("2 - Таблица замеров")
+# Выбор действия
+choice = input("Выберите действие: ")
+
+# Часть 1
+if choice == '1':
+    print("Введите элементы массива через пробел: ", end='')
+    try:
+        user_arr = list(map(int, input().split()))
+            
+        print("Исходный массив:", user_arr)
+        sorted_arr, swaps = selection_sort(user_arr)
+        print("Отсортированный массив:", sorted_arr)
+        print("Количество перестановок:", swaps)
+    except ValueError:
+        print("Ошибка: введите целые числа.")
+        
+# Часть 2, создание таблицы
+elif choice == '2':
+    try:
+        sizes = []
+        for i in range(3):
+            size = int(input(f"Введите размерность N{i+1}: "))
+            if size > 0:
+                sizes.append(size)
+            else:
+                raise ValueError("Negative value is not allowed.")
+        # Отрисовка таблицы
+        print('-' * 103) 
+        print(f"|{'':20}|{'N1':^26}|{'N2':^26}|{'N3':^26}|")
+        print('-' * 103)
+        print(f"|{'':20}|", end='')
+        for i in range(3):
+            print(f"{'время':^10} |{'перестановки':^14}|", end='')
+        print()
+        print('-' * 103)
+        
+        # Упорядоченный список
+        print(f"|{'Упорядоченный список':^20}|", end='')
+        for size in sizes:
+            arr = generate_array(size, 'sorted')
+            time_taken, swaps = measure_sort(arr)
+            print(f'{time_taken:^10.4f} | {swaps:^12} |', end='')
+        print()
+        
+        print('-' * 103)
+        
+        # Случайный список
+        print(f"|{'Случайный список':^20}|", end='')
+        for size in sizes:
+            arr = generate_array(size, 'random')
+            time_taken, swaps = measure_sort(arr)
+            print(f'{time_taken:^10.4f} | {swaps:^12} |', end='')
+        print()
+        
+        print('-' * 103)
+        
+        # Обратный порядок
+        print(f"|{'Обратный порядок':^20}|", end='')
+        for size in sizes:
+            arr = generate_array(size, 'reversed')
+            time_taken, swaps = measure_sort(arr)
+            print(f'{time_taken:^10.4f} | {swaps:^12} |', end='')
+        print()
+        
+        print('-' * 103)
+    except ValueError:
+        print("Ошибка, было введено не целое число")
+
+else:
+    print("Неверный выбор.")
+
+# Часть 2
+y_total_pos = 80
+a_min = int(input('Введите минимальный размер для списка: '))
+a_max = int(input('Введите максимальный размер для списка: '))
+y_min = min(measure_sort(generate_array(a_min, 'random'))[0], measure_sort(generate_array(a_min, 'sorted'))[0], measure_sort(generate_array(a_min, 'reversed'))[0])
+y_max = max(measure_sort(generate_array(a_max, 'random'))[0], measure_sort(generate_array(a_max, 'sorted'))[0], measure_sort(generate_array(a_max, 'reversed'))[0])
+a_step = max(1, (a_max - a_min) // 10)
+if y_max == y_min:
+    y_max += 0.000001
+
+#Построение горизонтальной(у) линейки
+notches = int(input('Сколько засечек? '))
+last_pos = 0  #Пусть начальная позиция = 0
+show_y = ' '*10  #Горизонтальный отступ для значений
+#Построение засечек
+if 4 <= notches <= 8 and (a_max - a_min) > 0:
+    #Нахождение равных интервалов, которые в сумме составляют область значений y
+    y_step = (y_max - y_min) / (notches - 1)
+    #Кол-во засечек = кол-во вставок значений 
+    for i in range(notches):
+        #Нахождение текущего значения y, просто мин y складываем с шагом(интервалом)
+        current_y = y_min + i * y_step
+        #Масштабируем
+        normalized_y = (current_y - y_min) / (y_max - y_min)
+        notch_pos = int(normalized_y * (y_total_pos - 1))
+        #Вывод значения
+        label = f'{current_y:.2f}'
+        show_y = show_y + ' '*(notch_pos - last_pos) + label
+        last_pos = notch_pos + len(label)  # учитываем длину подписи
+
+    print(show_y)
+    print()
+
+    #Проверяем, нужно ли рисовать ось X
+    draw_x_axis = y_min < 0 < y_max
+    x_axis_pos = None
+    if draw_x_axis:\
+        x_axis_pos = int((0 - y_min) * (y_total_pos - 1) / (y_max - y_min))
+    current_a = a_min
+    # Кол-во значений a
+    n = int((a_max - a_min) / a_step)
+    for i in range(n+1):
+        y_sorted = measure_sort(generate_array(current_a, 'sorted'))[0]
+        y_random = measure_sort(generate_array(current_a, 'random'))[0]
+        y_reversed = measure_sort(generate_array(current_a, 'reversed'))[0]
+
+        # Позиции звёздочек
+        pos_sorted = int((y_sorted - y_min) * (y_total_pos - 1) / (y_max - y_min))
+        pos_random = int((y_random - y_min) * (y_total_pos - 1) / (y_max - y_min))
+        pos_reversed = int((y_reversed - y_min) * (y_total_pos - 1) / (y_max - y_min))
+        #star_position = int((y1 - y_min) * (y_total_pos - 1) / (y_max - y_min))
+        a_str = f"{current_a:8.2f} |"
+        #Строим строку
+        graph_line = a_str
+        for pos in range(y_total_pos):
+            if pos == pos_sorted:
+                graph_line += "*"
+            elif pos == pos_random:
+                graph_line += "&"
+            elif pos == pos_reversed:
+                graph_line += "$"
+            elif draw_x_axis and pos == x_axis_pos:
+                graph_line += "|"
+            else:
+                graph_line += " "
+        
+        print(graph_line)
+        current_a += a_step
+    
+    print('\n* - sorted, & - random, $ - reversed')
+else:
+    print('Ошибка, кол-во засечек не должно превышать 8 и быть меньше 4')
+    print('Максимальное значение y не должно совпадать с минимальным значением y, оба значение не должны быть отрицательными')
