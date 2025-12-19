@@ -1,0 +1,137 @@
+#task 1.1
+with open('in.txt', 'r') as f:
+    new_list = [line.strip().split() for line in f]
+
+l, r = 0, len(new_list) - 1
+
+while l < r:
+    for i in range(r - l):
+        t, b = l, r
+        temp = new_list[t][l + i]
+        new_list[t][l + i] = new_list[b - i][l]
+        new_list[b - i][l] = new_list[b][r - i]
+        new_list[b][r - i] = new_list[t + i][r]
+        new_list[t + i][r] = temp
+    
+    l += 1
+    r -= 1
+
+with open('in.txt', 'w') as f:
+    for line in new_list:
+        f.write(' '.join(line) + '\n')
+# task 1.2
+with open('in.txt', 'r', encoding='utf-8') as infile, \
+     open('out.txt', 'w', encoding='utf-8') as outfile:
+
+    buffer = ''
+    
+    for line in infile:
+        buffer += line
+        while '.' in buffer:
+            # Находим первую точку
+            dot_pos = buffer.index('.')
+            # Берём всё до этой точки включительно — это готовое предложение
+            sentence = buffer[:dot_pos + 1].strip()
+            # Записываем его в выходной файл
+            if sentence:
+                outfile.write(sentence + '\n')
+            # Убираем обработанную часть из буфера
+            buffer = buffer[dot_pos + 1:].lstrip()
+    
+    if buffer.strip():
+        outfile.write(buffer.strip() + '\n')
+# task 2
+import struct
+
+FORMAT = 'hf'
+SIZE = struct.calcsize(FORMAT)
+
+
+def create_bin_file():
+    filename = 'in.bin'
+    with open(filename, mode='wb') as file:
+        for _ in range(6):
+            data = input('Введите [int float]: ').split()
+            if len(data) != 2:
+                return 'Неправильный ввод'
+            packed_data = struct.pack(FORMAT, int(data[0]), float(data[1]))
+            file.write(packed_data)
+    return 'Успешная запись'
+
+def find_optimal_partitions(method, x1, x2, integral, epsilon):
+    n = 1  # начинаем с минимального N
+    prev_integral = method(x1, x2, n)
+    
+    while True:
+        n *= 2  
+        current_integral = method(x1, x2, n)
+        
+        if abs(current_integral - prev_integral) < epsilon:
+            return current_integral, n 
+        
+        prev_integral = current_integral
+        
+def f(x):
+    return x ** 2 - 10
+
+
+def method_tr(a, b, n):
+    delta_x = (b - a) / n
+    s = 0
+        
+    for i in range(n):
+        y1 = f(a + delta_x * i)
+        y2 = f(a + delta_x * (i + 1))
+        s += (y1 + y2) * delta_x / 2
+        
+    return s
+
+def perv(x):
+    return x ** 3 / 3 - 10 * x
+
+
+def find_integral(a, b):
+    return abs(perv(b) - perv(a))
+
+
+max_integral = None
+max_index = -1
+index = 0
+results = []
+
+with open('in.bin', 'rb') as file:
+    print('start')
+    while True:
+        print('hi')
+        chunk = file.read(SIZE)
+        if not chunk:
+            break
+        a, eps = struct.unpack(FORMAT, chunk)
+        exact = find_integral(0, a)
+        approx, n = find_optimal_partitions(method_tr, 0, a, exact, eps)
+
+        results.append((n, abs(approx)))
+
+        if max_integral is None or approx > max_integral:
+            max_integral = approx
+            max_index = index
+        
+        index += 1
+
+with open('in.bin', 'wb') as file:
+    print('start2')
+    for i, (n, integral) in enumerate(results):
+        if i == max_index:
+            continue
+        file.write(struct.pack(FORMAT, n, integral))
+
+print('\nСодержимое итогового файла:')
+with open('in.bin', 'rb') as file:
+    i = 1
+    while True:
+        chunk = file.read(SIZE)
+        if not chunk:
+            break
+        n, integral = struct.unpack(FORMAT, chunk)
+        print(f'{i}: разбиений = {n}, интеграл = {integral}')
+        i += 1
