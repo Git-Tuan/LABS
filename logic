@@ -1,0 +1,79 @@
+def steffensen(f, x0, eps, nmax):
+    """
+    """
+    x = x0
+    result = (None, None, nmax, 1)
+    i = 1
+    done = False
+
+    while i <= nmax and not done:
+        try:
+            fx = f(x)
+
+            if abs(fx) < eps:
+                result = (x, fx, i, 0)
+                done = True
+            else:
+                fxf = f(x + fx)
+                denom = fxf - fx
+
+                x_new = x - fx * fx / denom
+
+                if abs(x_new - x) < eps:
+                    result = (x_new, f(x_new), i, 0)
+                    done = True
+                else:
+                    x = x_new
+
+        except ZeroDivisionError:
+            result = (None, None, i, 2)
+            done = True
+        except TypeError:
+            result = (None, None, i, 3)
+            done = True
+        except ValueError:
+            result = (None, None, i, 4)
+            done = True
+
+        i += 1
+
+    return result
+
+
+def find_roots(f, a, b, h, eps, nmax):
+    roots = []
+    x = a
+    root_id = 1
+
+    while x < b:
+        x_next = min(x + h, b)
+
+        try:
+            fx = f(x)
+            fx_next = f(x_next)
+        except (TypeError, ValueError, ZeroDivisionError):
+            x = x_next
+            continue
+
+        if fx * fx_next <= 0:
+            root, fx_root, iters, err = steffensen(f, (x + x_next) / 2, eps, nmax)
+
+            belong_to_interval = x < root < x_next
+
+            roots.append({
+                "id": root_id,
+                "interval": (x, x_next),
+                "root": root,
+                "fx": fx_root,
+                "iters": iters,
+                "error": err if belong_to_interval else 5 
+            })
+
+            root_id += 1
+
+        x = x_next
+
+    return roots
+
+
+
